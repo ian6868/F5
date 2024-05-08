@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<style>
+		body {
+			margin: 0;
+			padding: 0;
+      background-color: #000000;
+			overflow: hidden;
+		}
+	</style>
+</head>
+<body>
+	<canvas id="canvas" style="object-fit: contain; top: 0; left: 0; position: absolute;"></canvas>
+
+	<script>
+var c1 = "hsl(172, 100%, 50%)";
+var c2 = "hsl(320, 100%, 50%)";
+var c3 = "hsl(310, 100%, 50%)";
+var c4 = "hsl(280, 100%, 50%)";
+var c5 = "hsl(300, 100%, 50%)";
+var c6 = "hsl(290, 100%, 50%)";
+
+	/*Release canvas from memory*/
+    function releaseCanvas(canvas) {
+      canvas.width = 1;
+      canvas.style.width = "1vw";
+      canvas.height = 1;
+      canvas.style.height = "1vh";
+      const ctx = canvas.getContext('2d');
+      ctx && ctx.clearRect(0, 0, 1, 1);
+      canvas.remove();
+    }
+
+    const canvas = document.querySelector('canvas');
+    const ctx = canvas.getContext('2d');
+    const width = canvas.width =4096;
+    const height = canvas.height = 4096;
+    canvas.style.width = "100vw";
+    canvas.style.height = '100vh';
+    canvas.getContext('2d').scale(2,2);
+    ctx.fillStyle = "#000000";
+    ctx.fillRect(0,0,4096,4096);
+
+    const lines = [];
+    const colors = [c1, c2, c3, c4, c5, c6];
+
+		function vLines(color, startX, startY, endX, endY) {
+  ctx.beginPath();
+  ctx.strokeStyle = color;
+  ctx.moveTo(startX, startY);
+
+  const amplitude = 1000;
+  const frequency = 100;
+  let x = startX;
+  let y = startY;
+
+  while (x < endX) {
+    x += 1;
+    y = startY + amplitude * Math.sin(frequency * (x - startX));
+    ctx.lineTo(x, y);
+  }
+
+  ctx.stroke();
+}
+
+// Define maximum and minimum lightness values
+const maxLightness = 70;
+const minLightness = 0;
+
+function startDrawing() {
+  // Clear canvas
+  ctx.clearRect(0, 0, width, height);
+	ctx.fillStyle = "#000000";
+	ctx.fillRect(0,0,4096,4096);
+
+  // Update colors and draw lines
+  lines.forEach(line => {
+    // Randomly choose to increase or decrease the lightness
+    const direction = Math.random() > 0.5 ? 1 : -1;
+    line.lightness += line.transitionSpeed * direction;
+
+    // Ensure lightness stays within bounds
+    line.lightness = Math.min(maxLightness, Math.max(minLightness, line.lightness));
+
+    // Update color based on new lightness
+    line.color = `hsl(${line.hue}, 100%, ${line.lightness}%)`;
+
+    // Draw line
+    vLines(line.color, line.startX, line.startY, line.endX, line.endY);
+  });
+
+  // Request next frame for continuous animation
+  requestAnimationFrame(startDrawing);
+}
+
+// Initialize lines with colors from the colors array, random lightness, and transition speeds
+for (let i = 0; i < 1000; i++) {
+  const color = colors[Math.floor(Math.random() * colors.length)]; // Random color from the colors array
+  const hue = parseInt(color.match(/\d+/)[0]); // Extract hue value from HSL color string
+  const lightness = Math.floor(Math.random() * (maxLightness - minLightness + 1)) + minLightness;
+  const startX = Math.random() * width;
+  const startY = Math.random() * height / 2;
+  const endX = startX + Math.random() * 300 - 100;
+  const endY = startY + Math.random() * 300 - 100;
+  const transitionSpeed = Math.random() * 1 + 0.1; // Random speed between 0.1 and 0.6
+  lines.push({ hue, lightness, color, startX, startY, endX, endY, transitionSpeed });
+}
+
+// Initial drawing
+startDrawing();
+
+    document.querySelector("canvas").addEventListener("click",function(){
+      			  location.reload();
+      		  });
+
+						/*Run release even when they refresh not with click (F5, refresh button, closing page)*/
+	        window.addEventListener('pagehide', (event) => {
+	        /*Release every canvas*/
+	        var canvases = document.getElementsByTagName("canvas");
+	        var canvasesList = Array.prototype.slice.call(canvases);
+	              canvasesList.forEach(releaseCanvas);
+	        });
+
+</script>
+</body>
+</html>
